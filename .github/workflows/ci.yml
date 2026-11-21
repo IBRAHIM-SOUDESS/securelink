@@ -1,0 +1,59 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  backend:
+    name: Backend Pipeline Validation (FastAPI / Python)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: "pip"
+          cache-dependency-path: backend/requirements.txt
+
+      - name: Install backend dependencies
+        run: pip install -r backend/requirements.txt
+
+      - name: Syntax & bytecode verification
+        run: python -m compileall -q backend
+
+      - name: Run backend test suite
+        env:
+          PYTHONPATH: .
+        run: pytest backend/tests -v
+
+  frontend:
+    name: Frontend Typecheck & Lint (Next.js / TypeScript)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install frontend dependencies
+        run: npm ci
+
+      - name: Generate Next.js types & TypeScript check
+        run: |
+          npx next typegen
+          npx tsc --noEmit
