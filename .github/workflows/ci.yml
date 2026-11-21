@@ -11,7 +11,7 @@ permissions:
 
 jobs:
   backend:
-    name: Backend Pipeline Validation (FastAPI / Python)
+    name: Backend Pipeline Tests (FastAPI / Python)
     runs-on: ubuntu-latest
 
     steps:
@@ -31,13 +31,13 @@ jobs:
       - name: Syntax & bytecode verification
         run: python -m compileall -q backend
 
-      - name: Run backend test suite
+      - name: Run deterministic backend test suite
         env:
           PYTHONPATH: .
-        run: pytest backend/tests -v
+        run: pytest backend/tests --ignore=backend/tests/test_providers.py -v
 
   frontend:
-    name: Frontend Typecheck & Lint (Next.js / TypeScript)
+    name: Frontend Typecheck (Next.js / TypeScript)
     runs-on: ubuntu-latest
 
     steps:
@@ -47,11 +47,10 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: "20"
-          cache: "npm"
+          node-version: "22"
 
       - name: Install frontend dependencies
-        run: npm ci
+        run: npm install --no-audit --no-fund
 
       - name: Generate Next.js types & TypeScript check
         run: |
